@@ -1,0 +1,11 @@
+*.orig
+*.rej
+*.so
+*.swp
+*.test
+*.zip
+*~
+*#*#
+_obj
+/*.patch
+/scsi-id
