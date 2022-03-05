@@ -154,7 +154,7 @@ func (dev Dev) IDs() (dscs []IdDsc, err error) {
 		err = fmt.Errorf("page83evpd: %w", err)
 	} else if data[1] != Page83 {
 		err = fmt.Errorf("page83evpd: code mismatch: %#x", data[1])
-	} else if n := int(data[2])<<8 | int(data[3]); n > len(data) {
+	} else if n := 4 + (int(data[2])<<8 | int(data[3])); n > len(data) {
 		err = fmt.Errorf("page83evpd: excessive length: %d", n)
 	} else {
 		for i, j := 4, 4; i < n; i = j {
