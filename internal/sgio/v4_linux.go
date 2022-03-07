@@ -11,9 +11,9 @@ import (
 	"github.com/platinasystems/scsi/internal/godefs/sg"
 )
 
-type V4 struct{ Dev }
+type v4 struct{ embeddedDev }
 
-func (v4 V4) Request(cdb, data []byte, todev ...byte) error {
+func (v4 v4) Request(cdb, data []byte, todev ...byte) error {
 	sense := make([]byte, 32)
 	hdr := bsg.SgIoV4{
 		Guard:          'Q',

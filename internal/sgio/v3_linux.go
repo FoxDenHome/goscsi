@@ -12,14 +12,13 @@ import (
 )
 
 const (
-	Millisecond = 1
-	Second      = 1000 * Millisecond
-	Timeout     = 5 * Second
+	millisecond = 1
+	second      = 1000 * millisecond
 )
 
-type V3 struct{ Dev }
+type v3 struct{ embeddedDev }
 
-func (v3 V3) Request(cdb, data []byte, todev ...byte) error {
+func (v3 v3) Request(cdb, data []byte, todev ...byte) error {
 	dir := int32(sg.SG_DXFER_NONE)
 	sense := make([]byte, 32)
 	if len(todev) > 0 {
@@ -43,7 +42,7 @@ func (v3 V3) Request(cdb, data []byte, todev ...byte) error {
 		Dxferp:         &data[0],
 		Cmdp:           (*uint8)(&cdb[0]),
 		Sbp:            (*uint8)(&sense[0]),
-		Timeout:        Timeout,
+		Timeout:        5 * second,
 	}
 	err := v3.IOCTL(sg.SG_IO, uintptr(unsafe.Pointer(&hdr)))
 	if err != nil {

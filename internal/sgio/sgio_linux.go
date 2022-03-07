@@ -5,40 +5,37 @@
 package sgio
 
 import (
-	"syscall"
 	"unsafe"
 
+	"github.com/platinasystems/scsi/internal/device"
 	"github.com/platinasystems/scsi/internal/godefs/sg"
 )
 
-type Dev int
+type Dev interface {
+	Close() error
+	Request(cdb, fromdev []byte, todev ...byte) error
+}
+
+type embeddedDev interface {
+	Close() error
+	IOCTL(cmd, data uintptr) error
+}
 
 func Open(fn string) (Dev, error) {
-	const (
-		mode = syscall.O_RDONLY | syscall.O_NONBLOCK | syscall.O_CLOEXEC
-		perm = 0
-	)
-	fd, err := syscall.Open(fn, mode, perm)
-	return Dev(fd), err
-}
-
-func (dev Dev) Close() error {
-	return syscall.Close(int(dev))
-}
-func (dev Dev) IOCTL(cmd, v uintptr) (err error) {
-	fd := uintptr(dev)
-	_, _, errno := syscall.RawSyscall(syscall.SYS_IOCTL, fd, cmd, v)
-	if errno != 0 {
-		err = errno
-	}
-	return
-}
-
-// Version returns symver ecoded with X100 segments, e.g. 30536 :: "v3.5.36"
-func (dev Dev) Version() (ver int32) {
-	err := dev.IOCTL(sg.SG_GET_VERSION_NUM, uintptr(unsafe.Pointer(&ver)))
+	var symver uint32
+	symverptr := uintptr(unsafe.Pointer(&symver))
+	dev, err := device.Open(fn)
 	if err != nil {
-		ver = -1
+		return nil, err
 	}
-	return
+	err = dev.IOCTL(sg.SG_GET_VERSION_NUM, symverptr)
+	if err != nil {
+		return nil, err
+	}
+	// symver is encoded in X100 segments, e.g.
+	//	30536 :: "v3.5.36"
+	if symver > 400000 {
+		return v4{dev}, nil
+	}
+	return v3{dev}, nil
 }
