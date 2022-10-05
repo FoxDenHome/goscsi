@@ -114,10 +114,10 @@ func (dev Dev) SerialNumber() (sn String, err error) {
 		err = fmt.Errorf("page80evpd: %w", err)
 	} else if data[1] != Page80 {
 		err = fmt.Errorf("page80evpd: code mismatch: %#x", data[1])
-	} else if n := int(data[3]); n > len(data) {
+	} else if n := int(data[3]); n+4 > len(data) {
 		err = fmt.Errorf("page80evpd: excessive length: %d", n)
 	} else {
-		sn = String(data[4:n])
+		sn = String(data[4 : n+4])
 	}
 	return
 }
