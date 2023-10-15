@@ -30,6 +30,7 @@ func Open(fn string) (Dev, error) {
 	}
 	err = dev.IOCTL(sg.SG_GET_VERSION_NUM, symverptr)
 	if err != nil {
+		dev.Close()
 		return nil, err
 	}
 	// symver is encoded in X100 segments, e.g.
