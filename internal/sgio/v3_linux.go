@@ -6,31 +6,31 @@ package sgio
 
 import (
 	"fmt"
+	"time"
 	"unsafe"
 
-	"github.com/platinasystems/scsi/internal/godefs/sg"
-)
-
-const (
-	millisecond = 1
-	second      = 1000 * millisecond
+	"github.com/FoxDenHome/goscsi/godefs/sg"
 )
 
 type v3 struct{ embeddedDev }
 
-func (v3 v3) Request(cdb, data []byte, todev ...byte) error {
+func (v3 v3) Request(cdb, fromdev, todev []byte) error {
+	return v3.RequestWithTimeout(cdb, fromdev, todev, time.Second*5)
+}
+
+func (v3 v3) RequestWithTimeout(cdb, fromdev, todev []byte, timeout time.Duration) error {
 	dir := int32(sg.SG_DXFER_NONE)
 	sense := make([]byte, 32)
 	if len(todev) > 0 {
-		if len(data) > 0 {
+		if len(fromdev) > 0 {
 			dir = sg.SG_DXFER_TO_FROM_DEV
-			copy(data, todev)
-			data = data[:len(todev)]
+			copy(fromdev, todev)
+			fromdev = fromdev[:len(todev)]
 		} else {
 			dir = sg.SG_DXFER_TO_DEV
-			data = todev
+			fromdev = todev
 		}
-	} else if len(data) > 0 {
+	} else if len(fromdev) > 0 {
 		dir = sg.SG_DXFER_FROM_DEV
 	}
 	var hdr = sg.SgIoHdr{
@@ -38,33 +38,32 @@ func (v3 v3) Request(cdb, data []byte, todev ...byte) error {
 		CmdLen:         uint8(len(cdb)),
 		MxSbLen:        uint8(len(sense)),
 		DxferDirection: dir,
-		DxferLen:       uint32(len(data)),
-		Dxferp:         &data[0],
+		DxferLen:       uint32(len(fromdev)),
+		Dxferp:         &fromdev[0],
 		Cmdp:           (*uint8)(&cdb[0]),
 		Sbp:            (*uint8)(&sense[0]),
-		Timeout:        5 * second,
+		Timeout:        uint32(timeout.Milliseconds()),
 	}
 	err := v3.IOCTL(sg.SG_IO, uintptr(unsafe.Pointer(&hdr)))
 	if err != nil {
 		return err
 	}
 	if (hdr.Info & sg.SG_INFO_OK_MASK) != sg.SG_INFO_OK {
-		err = fmt.Errorf("INQUIRY !OK:")
 		if n := int(hdr.SbLenWr); n > 0 {
-			err = fmt.Errorf("%v\n\tsense: %x",
-				err, sense[:n])
+			err = fmt.Errorf("scsi error: sense: %x",
+				sense[:n])
 		}
 		if hdr.MaskedStatus != 0 {
-			err = fmt.Errorf("%v\n\tscsi status=%#x",
-				err, hdr.Status)
+			err = fmt.Errorf("scsi error: scsi status=%#x",
+				hdr.Status)
 		}
 		if hdr.HostStatus != 0 {
-			err = fmt.Errorf("%v\n\thost status=%#x",
-				err, hdr.HostStatus)
+			err = fmt.Errorf("scsi error: host status=%#x",
+				hdr.HostStatus)
 		}
 		if hdr.DriverStatus != 0 {
-			err = fmt.Errorf("%v\n\tdriver status=%#x",
-				err, hdr.DriverStatus)
+			err = fmt.Errorf("scsi error: driver status=%#x",
+				hdr.DriverStatus)
 		}
 	}
 	return err

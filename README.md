@@ -1,9 +1,9 @@
-Package scsi provides a device command interface and the [scsi-id](cmd/scsi-id/main.go) example program.
+package goscsi provides a device command interface and the [scsi-id](cmd/scsi-id/main.go) example program.
 
 To regenerate CGO definitions of system headers,
 
 ```console
-$ go generate ./internal/godefs
+$ go generate ./godefs
 ```
 
 ---

@@ -5,15 +5,17 @@
 package sgio
 
 import (
+	"time"
 	"unsafe"
 
-	"github.com/platinasystems/scsi/internal/device"
-	"github.com/platinasystems/scsi/internal/godefs/sg"
+	"github.com/FoxDenHome/goscsi/godefs/sg"
+	"github.com/FoxDenHome/goscsi/internal/device"
 )
 
 type Dev interface {
 	Close() error
-	Request(cdb, fromdev []byte, todev ...byte) error
+	Request(cdb, fromdev, todev []byte) error
+	RequestWithTimeout(cdb, fromdev, todev []byte, timeout time.Duration) error
 }
 
 type embeddedDev interface {

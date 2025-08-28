@@ -2,8 +2,8 @@
 // Use of this source code is governed by the GPL-2 license described in the
 // LICENSE file.
 
-package scsi
+package goscsi
 
-import "github.com/platinasystems/scsi/internal/sgio"
+import "github.com/FoxDenHome/goscsi/internal/sgio"
 
 var open = sgio.Open

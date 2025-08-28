@@ -1,3 +1,3 @@
-module github.com/platinasystems/scsi
+module github.com/FoxDenHome/goscsi
 
 go 1.17

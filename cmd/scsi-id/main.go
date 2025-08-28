@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/platinasystems/scsi"
+	scsi "github.com/FoxDenHome/goscsi"
 )
 
 func main() {
